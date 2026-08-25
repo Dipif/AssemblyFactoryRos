@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!--
+    use_isaac=false selects mock hardware for MoveIt/RViz-only tests.
+    use_isaac=true exchanges JointState messages with Isaac Sim.
+  -->
+  <xacro:macro name="custom_arm_controlled_joint" params="joint_name initial_position:=0.0">
+    <joint name="${joint_name}">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">${initial_position}</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro
+    name="custom_arm_ros2_control"
+    params="name:=CustomArmSystem
+            use_isaac:=false
+            joint_commands_topic:=/isaac_joint_commands
+            joint_states_topic:=/isaac_joint_states">
+    <ros2_control name="${name}" type="system">
+      <hardware>
+        <xacro:if value="${use_isaac}">
+          <plugin>topic_based_ros2_control/TopicBasedSystem</plugin>
+          <param name="joint_commands_topic">${joint_commands_topic}</param>
+          <param name="joint_states_topic">${joint_states_topic}</param>
+        </xacro:if>
+        <xacro:unless value="${use_isaac}">
+          <plugin>mock_components/GenericSystem</plugin>
+        </xacro:unless>
+      </hardware>
+
+      <xacro:custom_arm_controlled_joint joint_name="joint_1"/>
+      <xacro:custom_arm_controlled_joint joint_name="joint_2"/>
+      <xacro:custom_arm_controlled_joint joint_name="joint_3"/>
+      <xacro:custom_arm_controlled_joint joint_name="joint_4"/>
+      <xacro:custom_arm_controlled_joint joint_name="joint_5"/>
+      <xacro:custom_arm_controlled_joint joint_name="joint_6"/>
+    </ros2_control>
+  </xacro:macro>
+</robot>

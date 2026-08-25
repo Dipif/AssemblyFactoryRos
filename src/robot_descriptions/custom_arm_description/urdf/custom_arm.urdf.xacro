@@ -1,0 +1,210 @@
+<?xml version="1.0"?>
+<robot name="custom_arm" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!--
+    Educational 6-DOF serial manipulator.
+
+    Conventions:
+      * SI units: metres, kilograms, radians, seconds.
+      * The base is fixed by the simulator or by a MoveIt virtual joint.
+      * Every actuated joint uses position limits suitable for an initial demo.
+      * Primitive geometry keeps the model usable without external mesh files.
+
+    Kinematic chain:
+      base_link -> joint_1 -> link_1 -> ... -> joint_6 -> link_6 -> tool0
+  -->
+
+
+  <material name="dark_gray">
+    <color rgba="0.20 0.23 0.27 1.0"/>
+  </material>
+  <material name="orange">
+    <color rgba="0.95 0.32 0.06 1.0"/>
+  </material>
+  <material name="light_gray">
+    <color rgba="0.65 0.68 0.72 1.0"/>
+  </material>
+
+  <!-- A box whose link frame is at one end of the box. -->
+  <xacro:macro name="box_link" params="name mass sx sy sz ox oy oz material">
+    <link name="${name}">
+      <visual>
+        <origin xyz="${ox} ${oy} ${oz}" rpy="0 0 0"/>
+        <geometry>
+          <box size="${sx} ${sy} ${sz}"/>
+        </geometry>
+        <material name="${material}"/>
+      </visual>
+
+      <collision>
+        <origin xyz="${ox} ${oy} ${oz}" rpy="0 0 0"/>
+        <geometry>
+          <box size="${sx} ${sy} ${sz}"/>
+        </geometry>
+      </collision>
+
+      <inertial>
+        <origin xyz="${ox} ${oy} ${oz}" rpy="0 0 0"/>
+        <mass value="${mass}"/>
+        <inertia
+          ixx="${mass * (sy * sy + sz * sz) / 12.0}"
+          ixy="0.0"
+          ixz="0.0"
+          iyy="${mass * (sx * sx + sz * sz) / 12.0}"
+          iyz="0.0"
+          izz="${mass * (sx * sx + sy * sy) / 12.0}"/>
+      </inertial>
+    </link>
+  </xacro:macro>
+
+  <!-- A cylinder aligned with the link Z axis. -->
+  <xacro:macro name="cylinder_link" params="name mass radius length ox oy oz material">
+    <link name="${name}">
+      <visual>
+        <origin xyz="${ox} ${oy} ${oz}" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${radius}" length="${length}"/>
+        </geometry>
+        <material name="${material}"/>
+      </visual>
+
+      <collision>
+        <origin xyz="${ox} ${oy} ${oz}" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${radius}" length="${length}"/>
+        </geometry>
+      </collision>
+
+      <inertial>
+        <origin xyz="${ox} ${oy} ${oz}" rpy="0 0 0"/>
+        <mass value="${mass}"/>
+        <inertia
+          ixx="${mass * (3.0 * radius * radius + length * length) / 12.0}"
+          ixy="0.0"
+          ixz="0.0"
+          iyy="${mass * (3.0 * radius * radius + length * length) / 12.0}"
+          iyz="0.0"
+          izz="${mass * radius * radius / 2.0}"/>
+      </inertial>
+    </link>
+  </xacro:macro>
+
+  <!-- Base: 240 mm diameter, 120 mm tall. -->
+  <xacro:cylinder_link
+    name="base_link"
+    mass="6.0"
+    radius="0.12"
+    length="0.12"
+    ox="0.0" oy="0.0" oz="0.06"
+    material="dark_gray"/>
+
+  <!-- Shoulder column. The link frame is at its lower end. -->
+  <xacro:box_link
+    name="link_1"
+    mass="4.0"
+    sx="0.12" sy="0.12" sz="0.28"
+    ox="0.0" oy="0.0" oz="0.14"
+    material="orange"/>
+
+  <joint name="joint_1" type="revolute">
+    <parent link="base_link"/>
+    <child link="link_1"/>
+    <origin xyz="0.0 0.0 0.12" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-${pi}" upper="${pi}" effort="120.0" velocity="1.5"/>
+    <dynamics damping="0.10" friction="0.05"/>
+  </joint>
+
+  <!-- Upper arm, extending along +X. -->
+  <xacro:box_link
+    name="link_2"
+    mass="3.2"
+    sx="0.30" sy="0.10" sz="0.10"
+    ox="0.15" oy="0.0" oz="0.0"
+    material="light_gray"/>
+
+  <joint name="joint_2" type="revolute">
+    <parent link="link_1"/>
+    <child link="link_2"/>
+    <origin xyz="0.0 0.0 0.28" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-2.20" upper="2.20" effort="100.0" velocity="1.5"/>
+    <dynamics damping="0.10" friction="0.05"/>
+  </joint>
+
+  <!-- Forearm, extending along +X. -->
+  <xacro:box_link
+    name="link_3"
+    mass="2.5"
+    sx="0.26" sy="0.09" sz="0.09"
+    ox="0.13" oy="0.0" oz="0.0"
+    material="orange"/>
+
+  <joint name="joint_3" type="revolute">
+    <parent link="link_2"/>
+    <child link="link_3"/>
+    <origin xyz="0.30 0.0 0.0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-2.60" upper="2.60" effort="80.0" velocity="1.8"/>
+    <dynamics damping="0.08" friction="0.04"/>
+  </joint>
+
+  <!-- First wrist link. -->
+  <xacro:box_link
+    name="link_4"
+    mass="1.6"
+    sx="0.16" sy="0.08" sz="0.08"
+    ox="0.08" oy="0.0" oz="0.0"
+    material="light_gray"/>
+
+  <joint name="joint_4" type="revolute">
+    <parent link="link_3"/>
+    <child link="link_4"/>
+    <origin xyz="0.26 0.0 0.0" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-${pi}" upper="${pi}" effort="45.0" velocity="2.0"/>
+    <dynamics damping="0.06" friction="0.03"/>
+  </joint>
+
+  <!-- Second wrist link. -->
+  <xacro:box_link
+    name="link_5"
+    mass="1.0"
+    sx="0.12" sy="0.07" sz="0.07"
+    ox="0.06" oy="0.0" oz="0.0"
+    material="orange"/>
+
+  <joint name="joint_5" type="revolute">
+    <parent link="link_4"/>
+    <child link="link_5"/>
+    <origin xyz="0.16 0.0 0.0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-2.20" upper="2.20" effort="35.0" velocity="2.0"/>
+    <dynamics damping="0.05" friction="0.02"/>
+  </joint>
+
+  <!-- Tool flange. -->
+  <xacro:box_link
+    name="link_6"
+    mass="0.7"
+    sx="0.10" sy="0.06" sz="0.06"
+    ox="0.05" oy="0.0" oz="0.0"
+    material="light_gray"/>
+
+  <joint name="joint_6" type="revolute">
+    <parent link="link_5"/>
+    <child link="link_6"/>
+    <origin xyz="0.12 0.0 0.0" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-${pi}" upper="${pi}" effort="25.0" velocity="2.2"/>
+    <dynamics damping="0.04" friction="0.02"/>
+  </joint>
+
+  <!-- MoveIt uses tool0 as the tip of the manipulator planning group. -->
+  <link name="tool0"/>
+
+  <joint name="link_6_to_tool0" type="fixed">
+    <parent link="link_6"/>
+    <child link="tool0"/>
+    <origin xyz="0.10 0.0 0.0" rpy="0 0 0"/>
+  </joint>
+</robot>
