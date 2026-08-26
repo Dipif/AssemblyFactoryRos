@@ -45,7 +45,7 @@
   <exec_depend>warehouse_ros_mongo</exec_depend>
   <exec_depend>xacro</exec_depend>
   <exec_depend>topic_based_ros2_control</exec_depend>
-
+  <exec_depend>nav2_common</exec_depend>
 
   <export>
       <build_type>ament_cmake</build_type>
