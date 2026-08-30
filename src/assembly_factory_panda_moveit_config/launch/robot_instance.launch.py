@@ -2,6 +2,7 @@ import os
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
@@ -14,6 +15,7 @@ PACKAGE_NAME = "assembly_factory_panda_moveit_config"
 
 def generate_launch_description():
     robot_name = LaunchConfiguration("robot_name")
+    use_rviz = LaunchConfiguration("use_rviz")
 
     controller_manager_name = PathJoinSubstitution(
         ["/", robot_name, "controller_manager"]
@@ -172,6 +174,7 @@ def generate_launch_description():
         executable="rviz2",
         namespace=robot_name,
         name="rviz2",
+        condition=IfCondition(use_rviz),
         arguments=["-d", rviz_config_file],
         parameters=[
             moveit_config.robot_description,
@@ -189,6 +192,11 @@ def generate_launch_description():
                 "robot_name",
                 default_value="Franka_01",
                 description="Robot namespace and Isaac Sim robot identifier",
+            ),
+            DeclareLaunchArgument(
+                "use_rviz",
+                default_value="true",
+                description="Start RViz for this robot",
             ),
             world_to_robot_tf,
             robot_state_publisher,

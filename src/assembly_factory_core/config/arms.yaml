@@ -1,0 +1,65 @@
+arms:
+  - name: Franka_01
+    enabled: true
+    rviz: true
+
+    pick:
+      x: 0.50
+      y: 0.00
+      z: 0.025
+
+    place:
+      x: 0.40
+      y: 0.25
+      z: 0.025
+
+    hover_z: 0.30
+    grasp_offset_z: 0.105
+
+    tool_orientation:
+      x: 0.9238795
+      y: -0.3826834
+      z: 0.0
+      w: 0.0
+
+    object:
+      id: pick_cube_01
+      size: 0.05
+      orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+
+  - name: Franka_02
+    enabled: true
+    rviz: false
+
+    # Franka_02의 panda_link0 기준 좌표
+    pick:
+      x: 0.70
+      y: 0.00
+      z: 0.025
+
+    place:
+      x: 0.50
+      y: 0.25
+      z: 0.025
+
+    hover_z: 0.30
+    grasp_offset_z: 0.105
+
+    tool_orientation:
+      x: 1.0
+      y: 0.0
+      z: 0.0
+      w: 0.0
+
+    object:
+      id: pick_cube_02
+      size: 0.05
+      orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.3826834
+        w: 0.9238795
